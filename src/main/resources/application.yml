@@ -1,0 +1,49 @@
+server:
+  port: 9191
+
+spring:
+  application:
+    name: API-GATEWAY
+  cloud:
+    gateway:
+      routes:
+        - id: MEEXT-SERVICE
+          uri: lb://MEEXT-SERVICE
+          predicates:
+            - Path=/MeExt/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: MEEXT-SERVICE
+                fallbackuri: forward:/meextServiceFallBack
+        - id: VCLOUD-SERVICE
+          uri: lb://VCLOUD-SERVICE
+          predicates:
+            - Path=/vcloud/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: VCLOUD-SERVICE
+                fallbackuri: forward:/vcloudServiceFallBack
+
+
+hystrix:
+  command:
+    fallbackcmd:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 4000
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: hystrix.stream
+keycloak:
+  realm: fcp
+  auth-server-url: https://localhost:8443/auth
+  resource: springboot-keycloak
+  public-client: true
+  bearer-only: true
